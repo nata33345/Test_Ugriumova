@@ -1,0 +1,114 @@
+-----4. Написать SQL запрос по отчету 2, который выведет клиентов с регионом выдачи онлайн и выданные в 2024 году
+/*
+SELECT *
+FROM report2
+WHERE 
+    SubdivisionName = 'Онлайн' 
+    AND issueDateTimestamp LIKE '%2024%';
+*/
+
+
+--5. Написать SQL запрос по отчету 2, который выведет три поля: статус, количество клиентов в статусе, сумму выданных займов в статусе    
+/*
+SELECT 
+    Status,
+    COUNT(ClientID) AS ClientCount,
+    SUM(LoanAmount) AS TotalLoanAmount
+FROM 
+    report2
+GROUP BY 
+    Status
+ORDER BY 
+    ClientCount DESC;    
+    
+*/
+
+--6. Написать SQL запрос, который выведет все поля отчета 1 и отчета 2
+
+--создадим новую талицу с англ назв
+/*
+CREATE TABLE report1_en (
+    id INTEGER,
+    contract_number TEXT,
+    issue_date TEXT,  
+    amount REAL,
+    debt_principal REAL,
+    debt_percent REAL,
+    overdue_days INTEGER,
+    num_contract INTEGER
+);
+*/
+
+
+--загрузим данные
+/*
+INSERT INTO report1_en
+SELECT 
+    "№",
+    "Номер_контракта",
+    "дата_выдачи",
+    "Сумма_выдачи",
+    "Задолженность_по_ОД",
+    "Задолженность_по_%%",
+    "Кол-во_дней_просрочки,_фактическое",
+    num_contract
+FROM report1;
+*/
+
+
+
+--SELECT * FROM report1_en LIMIT 5;
+
+--DROP TABLE report1;
+
+--ALTER TABLE report1_en RENAME TO report1;
+
+
+---Все записи отчета 1 плюс записи отчета 2
+/*
+SELECT 
+    r1.id,
+    r1.contract_number,
+    r1.issue_date,
+    r1.amount,
+    r1.debt_principal,
+    r1.debt_percent,
+    r1.overdue_days,
+    r1.num_contract,
+    r2.ContractID,
+    r2.ClientID,
+    r2.inner_lead_id,
+    r2.SubdivisionName,
+    r2.issueDateTimestamp,
+    r2.RepaymentPlanDate,
+    r2.LoanAmount, 
+    r2.Status,
+    r2.DateStatus,
+    r2.SumLastPay
+FROM 
+    report1 r1
+LEFT JOIN 
+    report2 r2 ON r1.num_contract = r2.NumContract;
+*/
+
+-- если нужны полностью все записи и первого и второго отчета
+SELECT 
+    r1.*,
+    r2.*
+FROM 
+    report1 r1
+LEFT JOIN 
+    report2 r2 ON r1.num_contract = r2.NumContract
+
+UNION ALL
+
+SELECT 
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    r2.*
+FROM 
+    report2 r2
+WHERE 
+    NOT EXISTS (
+        SELECT 1 FROM report1 r1 
+        WHERE r1.num_contract = r2.NumContract
+    );
